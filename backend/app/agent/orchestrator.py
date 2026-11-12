@@ -37,7 +37,8 @@ class AgentOrchestrator:
         session_id: str = "default_session",
         mode: str = "memora_agentic", # "memora_agentic", "rag_vector", "standard_llm"
         retrieval_strategy: str = "hybrid_graphrag", # "hybrid_graphrag", "vector_only", "graph_traversal"
-        personalization_enabled: bool = True
+        personalization_enabled: bool = True,
+        persist_memory: bool = True
     ) -> Dict[str, Any]:
         start_time = time.time()
         thought_steps = []
@@ -119,19 +120,25 @@ class AgentOrchestrator:
         
         # Step 5: Episodic Recording & Semantic Triplet Extraction
         if mode == "memora_agentic":
-            ep = memory_manager.record_interaction(
-                db=db,
-                user_id=user_id,
-                session_id=session_id,
-                user_query=message,
-                assistant_response=response_text,
-                context_used=retrieved_context_text[:200],
-                salience=0.85
-            )
-            thought_steps.append({
-                "step": "Memory Consolidation & Triplet Encoding",
-                "description": f"Persisted episodic episode '{ep.id}'. Extracted semantic entities and synchronized Knowledge Graph."
-            })
+            if persist_memory:
+                ep = memory_manager.record_interaction(
+                    db=db,
+                    user_id=user_id,
+                    session_id=session_id,
+                    user_query=message,
+                    assistant_response=response_text,
+                    context_used=retrieved_context_text[:200],
+                    salience=0.85
+                )
+                thought_steps.append({
+                    "step": "Memory Consolidation & Triplet Encoding",
+                    "description": f"Persisted episodic episode '{ep.id}'. Extracted semantic entities and synchronized Knowledge Graph."
+                })
+            else:
+                thought_steps.append({
+                    "step": "Benchmark Evaluation Sandbox",
+                    "description": "Evaluation mode: synthesized state without persisting synthetic test turn into episodic store."
+                })
             
         latency = round((time.time() - start_time) * 1000.0, 2)
         

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ThumbsUp, ThumbsDown, Star, X, Check } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Star, X, Check, Sparkles } from 'lucide-react';
 import { api } from '@/lib/api';
 
 interface FeedbackModalProps {
@@ -46,7 +46,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
       setTimeout(() => {
         setSubmitted(false);
         onClose();
-      }, 1000);
+      }, 1200);
     } catch (err) {
       console.error(err);
     } finally {
@@ -55,62 +55,71 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 font-mono">
-      <div className="w-full max-w-md bg-[#0C101A] border border-slate-700 rounded-xl p-5 shadow-2xl relative text-slate-200 text-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 font-sans">
+      <div className="w-full max-w-md glass-panel-elevated rounded-2xl p-6 shadow-2xl relative text-slate-100 text-xs space-y-4">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-100"
+          className="absolute top-5 right-5 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition"
         >
           <X className="w-4 h-4" />
         </button>
 
-        <h3 className="text-sm font-bold text-slate-100 font-sans mb-1">
-          Online Feedback & Procedural Reinforcement
-        </h3>
-        <p className="text-[11px] text-slate-400 mb-4 font-sans">
-          Logs human critique to update episodic salience and reinforce active procedural workflows.
-        </p>
+        <div>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[10px] font-mono text-cyan-300 font-semibold mb-1.5">
+            <Sparkles className="w-3 h-3 text-cyan-400" />
+            <span>ONLINE REINFORCEMENT LEARNER</span>
+          </div>
+          <h3 className="text-base font-bold text-white font-sans">
+            Procedural Feedback & Calibration
+          </h3>
+          <p className="text-xs text-slate-300 mt-1">
+            Logs human critique to reinforce factual grounding and active procedural workflow heuristics.
+          </p>
+        </div>
 
         {submitted ? (
-          <div className="py-6 flex flex-col items-center justify-center space-y-1.5 text-emerald-400">
-            <Check className="w-6 h-6" />
-            <p className="font-semibold text-xs font-mono">Preference Vector Updated in Database</p>
+          <div className="py-8 flex flex-col items-center justify-center space-y-2 text-emerald-400">
+            <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
+              <Check className="w-6 h-6 text-emerald-400" />
+            </div>
+            <p className="font-semibold text-sm font-sans text-white">Preference Synchronized</p>
+            <p className="text-xs text-slate-400 font-mono">Cognitive weights reinforced in database</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-3.5">
-            <div className="flex gap-2.5">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => { setIsPositive(true); setRating(5); }}
-                className={`flex-1 py-1.5 rounded border flex items-center justify-center gap-1.5 text-xs transition ${
+                className={`flex-1 py-2.5 rounded-xl border flex items-center justify-center gap-2 text-xs font-semibold transition ${
                   isPositive
-                    ? 'bg-emerald-950/60 border-emerald-500 text-emerald-300 font-semibold'
-                    : 'border-slate-800 text-slate-400 hover:bg-slate-900'
+                    ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-md shadow-emerald-950/40'
+                    : 'glass-panel text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <ThumbsUp className="w-3.5 h-3.5" /> Positive Reinforcement
+                <ThumbsUp className="w-4 h-4 text-emerald-400" /> Positive Reinforce
               </button>
               <button
                 type="button"
                 onClick={() => { setIsPositive(false); setRating(2); }}
-                className={`flex-1 py-1.5 rounded border flex items-center justify-center gap-1.5 text-xs transition ${
+                className={`flex-1 py-2.5 rounded-xl border flex items-center justify-center gap-2 text-xs font-semibold transition ${
                   !isPositive
-                    ? 'bg-rose-950/60 border-rose-500 text-rose-300 font-semibold'
-                    : 'border-slate-800 text-slate-400 hover:bg-slate-900'
+                    ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 shadow-md shadow-rose-950/40'
+                    : 'glass-panel text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <ThumbsDown className="w-3.5 h-3.5" /> Negative Critique
+                <ThumbsDown className="w-4 h-4 text-rose-400" /> Negative Critique
               </button>
             </div>
 
             <div>
-              <label className="text-[10px] text-slate-400 block mb-1">
-                Targeted Dimension:
+              <label className="text-xs text-slate-300 block mb-1.5 font-medium">
+                Target Dimension:
               </label>
               <select
                 value={targetAspect}
                 onChange={(e) => setTargetAspect(e.target.value)}
-                className="w-full bg-[#080B11] border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-mono"
+                className="w-full bg-[#080B14] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-400 transition"
               >
                 <option value="accuracy">Factual Grounding / Faithfulness</option>
                 <option value="tone">Tone & Persona Calibration</option>
@@ -120,30 +129,30 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             </div>
 
             <div>
-              <label className="text-[10px] text-slate-400 block mb-1">
+              <label className="text-xs text-slate-300 block mb-1.5 font-medium">
                 Feedback Annotation / Guideline Instruction:
               </label>
               <textarea
                 value={feedbackText}
                 onChange={(e) => setFeedbackText(e.target.value)}
                 rows={3}
-                placeholder="e.g. Always provide KaTeX derivations; be more concise..."
-                className="w-full bg-[#080B11] border border-slate-800 rounded p-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500 font-mono"
+                placeholder="e.g. Always include KaTeX derivations; prefer structured comparison tables..."
+                className="w-full bg-[#080B14] border border-white/10 rounded-xl p-3 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:border-cyan-400 transition"
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-1 border-t border-slate-800">
+            <div className="flex justify-end gap-2.5 pt-2 border-t border-white/10">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-3 py-1.5 text-xs text-slate-400 hover:text-slate-200"
+                className="px-4 py-2 text-xs text-slate-400 hover:text-white"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-4 py-1.5 text-xs font-semibold bg-cyan-700 hover:bg-cyan-600 text-white rounded transition disabled:opacity-50"
+                className="px-5 py-2 text-xs font-semibold bg-gradient-to-r from-cyan-600 via-indigo-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white rounded-xl shadow-md transition disabled:opacity-50"
               >
                 {submitting ? 'Committing...' : 'Commit Feedback'}
               </button>
@@ -154,3 +163,5 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
     </div>
   );
 };
+
+export default FeedbackModal;

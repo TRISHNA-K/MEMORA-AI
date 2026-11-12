@@ -23,13 +23,16 @@ class EdgeCreateBody(BaseModel):
 
 @router.get("/full", response_model=FullGraphResponse)
 def get_full_graph(db: Session = Depends(get_db)):
-    kg_engine.load_from_db(db)
-    kg_engine.seed_initial_knowledge(db)
+    if len(kg_engine.graph.nodes) == 0:
+        kg_engine.seed_initial_knowledge(db)
+        kg_engine.load_from_db(db)
     return kg_engine.get_full_graph()
 
 @router.get("/subgraph")
 def get_subgraph(node_id: str, depth: int = 1, db: Session = Depends(get_db)):
-    kg_engine.load_from_db(db)
+    if len(kg_engine.graph.nodes) == 0:
+        kg_engine.seed_initial_knowledge(db)
+        kg_engine.load_from_db(db)
     return kg_engine.get_subgraph_by_seeds([node_id], depth=depth)
 
 @router.post("/node")

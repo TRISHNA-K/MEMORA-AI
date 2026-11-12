@@ -1,5 +1,6 @@
 import os
 import json
+import zlib
 import numpy as np
 from typing import List, Optional
 import faiss
@@ -55,7 +56,7 @@ class EmbeddingEngine:
             except Exception:
                 pass
                 
-        # 2. Deterministic high-speed semantic projection (hash + n-gram vectorizer)
+        # 2. Deterministic high-speed semantic projection (CRC32 n-gram vectorizer)
         # Yields instantaneous sub-millisecond semantic vectors with zero cold-start delay
         return self._fallback_embedding(text)
         
@@ -63,14 +64,14 @@ class EmbeddingEngine:
         words = text.lower().split()
         vec = np.zeros(self.dim, dtype=np.float32)
         for i, word in enumerate(words):
-            h = hash(word)
-            idx = abs(h) % self.dim
-            val = (h % 100) / 100.0
+            h = zlib.crc32(word.encode("utf-8"))
+            idx = h % self.dim
+            val = ((h >> 8) % 100) / 100.0
             vec[idx] += val * (1.0 / (i + 1)**0.5)
             # Bigram hashing
             if i > 0:
-                bi_h = hash(words[i-1] + "_" + word)
-                bi_idx = abs(bi_h) % self.dim
+                bi_h = zlib.crc32(f"{words[i-1]}_{word}".encode("utf-8"))
+                bi_idx = bi_h % self.dim
                 vec[bi_idx] += 0.5
         norm = np.linalg.norm(vec)
         if norm > 0:
@@ -106,5 +107,13 @@ class VectorStore:
                 item["similarity_score"] = float(score)
                 results.append(item)
         return results
+
+    def clear(self):
+        self.index = faiss.IndexFlatIP(self.dimension)
+        self.metadata = []
+
+    @property
+    def total(self) -> int:
+        return self.index.ntotal
 
 embedding_engine = EmbeddingEngine()

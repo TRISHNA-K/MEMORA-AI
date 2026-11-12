@@ -1,5 +1,5 @@
 import json
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Set, Optional
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.embeddings import embedding_engine, VectorStore
@@ -9,8 +9,60 @@ from app.memory.decay import decay_engine
 
 class GraphRAGRetriever:
     def __init__(self):
-        pass
+        self._vstore: Optional[VectorStore] = None
+        self._indexed_ids: Set[str] = set()
         
+    def invalidate_cache(self):
+        """Clears the cached vector index to force re-synchronization on updates"""
+        self._vstore = None
+        self._indexed_ids.clear()
+
+    def _sync_vector_store(self, db: Session, user_id: str) -> VectorStore:
+        """Incrementally synchronizes the in-memory FAISS vector index with DB records"""
+        if self._vstore is None:
+            self._vstore = VectorStore()
+            self._indexed_ids = set()
+
+        # 1. Incrementally index new episodic memories
+        episodes = db.query(EpisodicMemory).filter(EpisodicMemory.user_id == user_id).all()
+        for ep in episodes:
+            if ep.id not in self._indexed_ids:
+                text = f"User: {ep.user_query}\nAssistant: {ep.assistant_response}"
+                vec = embedding_engine.get_embedding(text)
+                self._vstore.add(
+                    text=text,
+                    meta={
+                        "id": ep.id,
+                        "type": "episodic",
+                        "category": "Dialogue",
+                        "decay_score": ep.decay_score,
+                        "salience": ep.salience_score
+                    },
+                    vector=vec
+                )
+                self._indexed_ids.add(ep.id)
+
+        # 2. Incrementally index new semantic facts
+        facts = db.query(SemanticFact).filter(SemanticFact.user_id == user_id).all()
+        for f in facts:
+            if f.id not in self._indexed_ids:
+                text = f.fact_text or f"{f.subject} {f.predicate} {f.object}"
+                vec = embedding_engine.get_embedding(text)
+                self._vstore.add(
+                    text=text,
+                    meta={
+                        "id": f.id,
+                        "type": "semantic",
+                        "category": f.category,
+                        "decay_score": f.decay_score,
+                        "salience": f.confidence
+                    },
+                    vector=vec
+                )
+                self._indexed_ids.add(f.id)
+
+        return self._vstore
+
     def retrieve_vector_only(
         self,
         query: str,
@@ -23,42 +75,7 @@ class GraphRAGRetriever:
         Encodes query into dense vector, searches episodic and semantic memories via cosine similarity.
         """
         q_vec = embedding_engine.get_embedding(query)
-        vstore = VectorStore()
-        
-        # Index episodic memories
-        episodes = db.query(EpisodicMemory).filter(EpisodicMemory.user_id == user_id).all()
-        for ep in episodes:
-            text = f"User: {ep.user_query}\nAssistant: {ep.assistant_response}"
-            vec = embedding_engine.get_embedding(text)
-            vstore.add(
-                text=text,
-                meta={
-                    "id": ep.id,
-                    "type": "episodic",
-                    "category": "Dialogue",
-                    "decay_score": ep.decay_score,
-                    "salience": ep.salience_score
-                },
-                vector=vec
-            )
-            
-        # Index semantic facts
-        facts = db.query(SemanticFact).filter(SemanticFact.user_id == user_id).all()
-        for f in facts:
-            text = f.fact_text or f"{f.subject} {f.predicate} {f.object}"
-            vec = embedding_engine.get_embedding(text)
-            vstore.add(
-                text=text,
-                meta={
-                    "id": f.id,
-                    "type": "semantic",
-                    "category": f.category,
-                    "decay_score": f.decay_score,
-                    "salience": f.confidence
-                },
-                vector=vec
-            )
-            
+        vstore = self._sync_vector_store(db, user_id)
         hits = vstore.search(q_vec, top_k=top_k)
         
         # Format context

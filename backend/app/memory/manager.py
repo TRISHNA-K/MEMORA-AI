@@ -266,11 +266,13 @@ class UnifiedMemoryManager:
         return items
 
     def delete_memory(self, db: Session, memory_id: str, user_id: str) -> bool:
+        from app.graph.graphrag import graphrag_retriever
         # Check in semantic
         sem = db.query(SemanticFact).filter(SemanticFact.id == memory_id, SemanticFact.user_id == user_id).first()
         if sem:
             db.delete(sem)
             db.commit()
+            graphrag_retriever.invalidate_cache()
             return True
             
         # Check in episodic
@@ -278,6 +280,7 @@ class UnifiedMemoryManager:
         if ep:
             db.delete(ep)
             db.commit()
+            graphrag_retriever.invalidate_cache()
             return True
             
         # Check in procedural
@@ -285,6 +288,7 @@ class UnifiedMemoryManager:
         if proc:
             db.delete(proc)
             db.commit()
+            graphrag_retriever.invalidate_cache()
             return True
             
         return False
@@ -298,6 +302,7 @@ class UnifiedMemoryManager:
         importance: float,
         category: str
     ) -> bool:
+        from app.graph.graphrag import graphrag_retriever
         sem = db.query(SemanticFact).filter(SemanticFact.id == memory_id, SemanticFact.user_id == user_id).first()
         if sem:
             sem.fact_text = content
@@ -305,6 +310,7 @@ class UnifiedMemoryManager:
             sem.category = category
             sem.decay_score = min(1.0, sem.decay_score + 0.15)
             db.commit()
+            graphrag_retriever.invalidate_cache()
             return True
             
         ep = db.query(EpisodicMemory).filter(EpisodicMemory.id == memory_id, EpisodicMemory.user_id == user_id).first()
@@ -313,6 +319,7 @@ class UnifiedMemoryManager:
             ep.assistant_response = content
             ep.decay_score = min(1.0, ep.decay_score + 0.15)
             db.commit()
+            graphrag_retriever.invalidate_cache()
             return True
             
         proc = db.query(ProceduralWorkflow).filter(ProceduralWorkflow.id == memory_id, ProceduralWorkflow.user_id == user_id).first()
@@ -320,6 +327,7 @@ class UnifiedMemoryManager:
             proc.rule_content = content
             proc.reinforcement_count += 1
             db.commit()
+            graphrag_retriever.invalidate_cache()
             return True
             
         return False

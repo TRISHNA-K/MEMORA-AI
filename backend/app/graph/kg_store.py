@@ -9,9 +9,11 @@ from app.models.db_models import KGNodeModel, KGEdgeModel
 class KnowledgeGraphEngine:
     def __init__(self):
         self.graph = nx.DiGraph()
+        self._cached_full_graph = None
         
     def load_from_db(self, db: Session):
         """Loads nodes and edges from database into NetworkX graph"""
+        self._cached_full_graph = None
         self.graph.clear()
         nodes = db.query(KGNodeModel).all()
         for node in nodes:
@@ -87,6 +89,7 @@ class KnowledgeGraphEngine:
             created_at=new_node.created_at.isoformat(),
             updated_at=new_node.updated_at.isoformat()
         )
+        self._cached_full_graph = None
         return node_id
 
     def add_edge(
@@ -139,9 +142,13 @@ class KnowledgeGraphEngine:
             weight=weight,
             evidence=evidence
         )
+        self._cached_full_graph = None
         return edge_id
 
     def get_full_graph(self) -> Dict[str, Any]:
+        if self._cached_full_graph is not None:
+            return self._cached_full_graph
+
         nodes_list = []
         for n_id, data in self.graph.nodes(data=True):
             deg = self.graph.degree(n_id) if self.graph.has_node(n_id) else 0
@@ -183,7 +190,7 @@ class KnowledgeGraphEngine:
             except Exception:
                 pass
                 
-        return {
+        res = {
             "nodes": nodes_list,
             "edges": edges_list,
             "stats": {
@@ -198,6 +205,8 @@ class KnowledgeGraphEngine:
                 )[:5]
             }
         }
+        self._cached_full_graph = res
+        return res
 
     def get_subgraph_by_seeds(self, seed_node_ids: List[str], depth: int = 1) -> Dict[str, Any]:
         """Expands k-hop neighborhood around seed nodes"""

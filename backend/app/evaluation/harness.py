@@ -50,7 +50,8 @@ class ExperimentHarness:
                     message=q,
                     user_id=user_id,
                     mode=v,
-                    retrieval_strategy="hybrid_graphrag" if v == "memora_agentic" else "vector_only"
+                    retrieval_strategy="hybrid_graphrag" if v == "memora_agentic" else "vector_only",
+                    persist_memory=False
                 )
                 lat = (time.time() - t0) * 1000.0
                 
@@ -168,7 +169,8 @@ class ExperimentHarness:
                     message=q,
                     user_id=user_id,
                     mode="memora_agentic",
-                    retrieval_strategy=v
+                    retrieval_strategy=v,
+                    persist_memory=False
                 )
                 lat = (time.time() - t0) * 1000.0
                 ctx = "\n".join([it["content"] for it in res["retrieved_memories"]])
@@ -277,7 +279,8 @@ class ExperimentHarness:
                     message=q,
                     user_id=user_id,
                     mode="memora_agentic" if is_pers else "standard_llm",
-                    personalization_enabled=is_pers
+                    personalization_enabled=is_pers,
+                    persist_memory=False
                 )
                 lat = (time.time() - t0) * 1000.0
                 

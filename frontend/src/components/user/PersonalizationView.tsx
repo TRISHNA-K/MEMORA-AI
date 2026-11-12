@@ -9,7 +9,9 @@ import {
   Code2, 
   BookOpen, 
   Zap, 
-  ShieldCheck 
+  ShieldCheck,
+  Sparkles,
+  Bot
 } from 'lucide-react';
 import { UserProfile } from '@/lib/types';
 import { api } from '@/lib/api';
@@ -22,26 +24,32 @@ export const PersonalizationView: React.FC = () => {
   const [detailLevel, setDetailLevel] = useState('high');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const load = async () => {
+    setError(null);
+    try {
+      const u = await api.getUserProfile();
+      setProfile(u);
+      setName(u.name);
+      setBio(u.bio || '');
+      setPreferredTone(u.preferred_tone);
+      setDetailLevel(u.detail_level);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Failed to connect to backend profile service.');
+    }
+  };
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const u = await api.getUserProfile();
-        setProfile(u);
-        setName(u.name);
-        setBio(u.bio || '');
-        setPreferredTone(u.preferred_tone);
-        setDetailLevel(u.detail_level);
-      } catch (err) {
-        console.error(err);
-      }
-    };
     load();
   }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setSaveError(null);
     try {
       const updated = await api.updateUserProfile({
         name,
@@ -51,9 +59,10 @@ export const PersonalizationView: React.FC = () => {
       });
       setProfile(updated);
       setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch (err) {
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err: any) {
       console.error(err);
+      setSaveError(err.message || 'Failed to update profile settings.');
     } finally {
       setSaving(false);
     }
@@ -64,80 +73,100 @@ export const PersonalizationView: React.FC = () => {
       id: 'academic_rigorous',
       title: 'Formal Academic & Mathematical Rigor',
       desc: 'Formulates answers with LaTeX equations, formal notation, variable definitions, and theoretical provenance.',
-      icon: BookOpen
+      icon: BookOpen,
+      accent: 'from-amber-500/20 to-orange-500/20 text-amber-300'
     },
     {
       id: 'concise',
       title: 'High-Density Concision',
       desc: 'Information-dense bullet points without conversational preamble, greetings, or filler text.',
-      icon: Zap
+      icon: Zap,
+      accent: 'from-cyan-500/20 to-blue-500/20 text-cyan-300'
     },
     {
       id: 'technical_code',
       title: 'Technical Implementation Standard',
       desc: 'Production Python implementations, strict PEP 484 type annotations, tensor dimension comments, and complexity analysis.',
-      icon: Code2
+      icon: Code2,
+      accent: 'from-indigo-500/20 to-purple-500/20 text-indigo-300'
     },
     {
       id: 'pedagogical',
       title: 'Pedagogical & Intuitive Synthesis',
       desc: 'Step-by-step conceptual motivation followed by formal mathematical definitions.',
-      icon: FileText
+      icon: FileText,
+      accent: 'from-emerald-500/20 to-teal-500/20 text-emerald-300'
     }
   ];
 
   return (
-    <div className="flex-1 flex flex-col h-screen bg-[#080B11] text-slate-200 overflow-y-auto font-mono">
-      {/* Header */}
-      <div className="p-6 border-b border-slate-800/90 bg-[#0C101A]">
+    <div className="flex-1 flex flex-col h-screen bg-[#06080F] text-slate-100 cyber-grid overflow-y-auto font-sans">
+      {/* Top Header */}
+      <div className="p-6 border-b border-white/[0.08] bg-[#0A0D18]/80 backdrop-blur-xl">
         <div className="max-w-4xl mx-auto space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono font-semibold text-amber-400 uppercase tracking-wider">
-              AGENT REASONING CALIBRATION
-            </span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs font-mono text-amber-300 font-semibold">
+            <Sliders className="w-3.5 h-3.5 text-amber-400" />
+            <span>AGENT REASONING CALIBRATION</span>
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-100 font-mono">
+          <h1 className="text-2xl font-bold tracking-tight text-white font-sans">
             Researcher Persona & Procedural Tuning
           </h1>
-          <p className="text-xs text-slate-400 max-w-xl font-sans">
+          <p className="text-xs text-slate-300 max-w-xl">
             Configure agent prompt conditioning parameters, output depth, and active procedural guidelines enforced during inference.
           </p>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto p-6 space-y-6 flex-1 w-full text-xs">
-        <form onSubmit={handleSave} className="space-y-5">
+        {error && (
+          <div className="p-4 rounded-xl bg-red-950/70 border border-red-800 text-red-200 text-xs flex items-center justify-between font-mono">
+            <span>{error}</span>
+            <button
+              onClick={load}
+              className="px-3 py-1 rounded-lg bg-red-800 hover:bg-red-700 text-white font-mono text-xs uppercase font-bold"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+        {saveError && (
+          <div className="p-4 rounded-xl bg-red-950/70 border border-red-800 text-red-200 text-xs font-mono">
+            {saveError}
+          </div>
+        )}
+
+        <form onSubmit={handleSave} className="space-y-6">
           {/* Identity Parameters */}
-          <div className="p-5 rounded-xl bg-[#0C101A] border border-slate-800 space-y-3.5">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-              <h3 className="font-semibold text-slate-200 font-mono flex items-center gap-2">
-                <User className="w-3.5 h-3.5 text-cyan-400" />
+          <div className="p-6 rounded-2xl glass-panel space-y-4">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                <User className="w-4 h-4 text-cyan-400" />
                 Researcher Identity Parameters
               </h3>
-              <ShieldCheck className="w-3.5 h-3.5 text-slate-500" />
+              <ShieldCheck className="w-4 h-4 text-slate-400" />
             </div>
 
-            <div className="grid grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] text-slate-400 block mb-1">
+                <label className="text-xs text-slate-300 block mb-1.5 font-medium">
                   Identity Handle:
                 </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-[#080B11] border border-slate-800 rounded px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-mono"
+                  className="w-full bg-[#080B14] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-400 transition"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] text-slate-400 block mb-1">
+                <label className="text-xs text-slate-300 block mb-1.5 font-medium">
                   Detail Level:
                 </label>
                 <select
                   value={detailLevel}
                   onChange={(e) => setDetailLevel(e.target.value)}
-                  className="w-full bg-[#080B11] border border-slate-800 rounded px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-mono"
+                  className="w-full bg-[#080B14] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-400 transition"
                 >
                   <option value="high">Deep Technical & Formal (High)</option>
                   <option value="medium">Balanced Executive Summary (Medium)</option>
@@ -147,26 +176,26 @@ export const PersonalizationView: React.FC = () => {
             </div>
 
             <div>
-              <label className="text-[10px] text-slate-400 block mb-1">
+              <label className="text-xs text-slate-300 block mb-1.5 font-medium">
                 Domain Specialization & Research Focus:
               </label>
               <textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 rows={2}
-                className="w-full bg-[#080B11] border border-slate-800 rounded p-2.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-mono"
+                className="w-full bg-[#080B14] border border-white/10 rounded-xl p-3 text-xs text-slate-100 focus:outline-none focus:border-cyan-400 transition"
               />
             </div>
           </div>
 
           {/* Reasoning Tone Options */}
-          <div className="p-5 rounded-xl bg-[#0C101A] border border-slate-800 space-y-3.5">
-            <h3 className="font-semibold text-slate-200 font-mono flex items-center gap-2 border-b border-slate-800 pb-2.5">
-              <Sliders className="w-3.5 h-3.5 text-amber-400" />
+          <div className="p-6 rounded-2xl glass-panel space-y-4">
+            <h3 className="font-bold text-sm text-white flex items-center gap-2 border-b border-white/10 pb-3">
+              <Sliders className="w-4 h-4 text-amber-400" />
               Inference Tone & Formalism Mode
             </h3>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3.5">
               {toneOptions.map((t) => {
                 const Icon = t.icon;
                 const isSelected = preferredTone === t.id;
@@ -174,22 +203,28 @@ export const PersonalizationView: React.FC = () => {
                   <div
                     key={t.id}
                     onClick={() => setPreferredTone(t.id)}
-                    className={`p-3.5 rounded-lg border text-left cursor-pointer transition space-y-1.5 ${
+                    className={`p-4 rounded-2xl border text-left cursor-pointer transition-all duration-200 space-y-2 ${
                       isSelected
-                        ? 'bg-[#121927] border-amber-500/80'
-                        : 'bg-[#080B11] border-slate-800 hover:border-slate-700'
+                        ? 'glass-panel-elevated border-amber-500/50 shadow-lg shadow-amber-950/20 ring-1 ring-amber-500/30'
+                        : 'glass-panel hover:border-white/20 hover:bg-slate-800/40'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Icon className="w-3.5 h-3.5 text-slate-400" />
-                        <span className="font-semibold text-slate-200">
+                      <div className="flex items-center gap-2.5">
+                        <div className={`p-1.5 rounded-lg bg-white/10 ${isSelected ? 'text-amber-400' : 'text-slate-400'}`}>
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <span className="font-semibold text-xs text-white">
                           {t.title}
                         </span>
                       </div>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-amber-400" />}
+                      {isSelected && (
+                        <div className="w-5 h-5 rounded-full bg-amber-400/20 border border-amber-400 flex items-center justify-center">
+                          <Check className="w-3 h-3 text-amber-300" />
+                        </div>
+                      )}
                     </div>
-                    <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
+                    <p className="text-xs text-slate-400 leading-relaxed font-sans">
                       {t.desc}
                     </p>
                   </div>
@@ -199,19 +234,19 @@ export const PersonalizationView: React.FC = () => {
           </div>
 
           {/* Save Button */}
-          <div className="flex justify-end gap-3 items-center">
+          <div className="flex justify-end gap-3 items-center pt-2">
             {saved && (
-              <span className="text-xs text-emerald-400 flex items-center gap-1 font-mono">
-                <Check className="w-3 h-3" />
-                Parameters updated in database
+              <span className="text-xs text-emerald-400 flex items-center gap-1.5 font-mono animate-fadeIn">
+                <Check className="w-4 h-4" />
+                Parameters synchronized with cognitive engine
               </span>
             )}
             <button
               type="submit"
               disabled={saving}
-              className="px-5 py-2 rounded-lg bg-amber-700 hover:bg-amber-600 text-white text-xs font-mono font-semibold transition disabled:opacity-50"
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 via-orange-600 to-amber-500 hover:from-amber-500 hover:to-orange-500 text-white text-xs font-semibold shadow-lg shadow-amber-500/25 transition-all duration-200 disabled:opacity-50 hover:-translate-y-0.5"
             >
-              {saving ? 'Saving...' : 'Apply Configuration'}
+              {saving ? 'Applying...' : 'Apply Configuration'}
             </button>
           </div>
         </form>
@@ -219,3 +254,5 @@ export const PersonalizationView: React.FC = () => {
     </div>
   );
 };
+
+export default PersonalizationView;
