@@ -217,59 +217,49 @@ class AgentOrchestrator:
         
         # Check specific domain queries
         if "decay" in q_lower or "memory" in q_lower or "ebbinghaus" in q_lower:
-            return f"""### 6-Factor Composite Memory Retention Model
+            return f"""### 6-Factor Memory Retention Architecture
 
-The retention probability $R(m_i, t)$ of memory item $m_i$ at elapsed time $\\Delta t = t - t_{{access}}$ is evaluated as a convex combination across six cognitive factors:
+MEMORA evaluates memory retention dynamically across six cognitive factors, determining what memories remain active and what naturally fades over time:
 
-$$Score_{{retention}}(m_i) = \\sum_{{k=1}}^{{6}} w_k \\cdot F_k(m_i), \\quad \\text{{where }} \\sum_{{k=1}}^{{6}} w_k = 1.0$$
+1. **Recency**: Newer experiences are retrieved quickly, while older items gradually fade unless reinforced.
+2. **Access Frequency**: Topics and memories you reference often are strengthened, preventing them from being forgotten.
+3. **Semantic Salience**: High-priority facts, personal preferences, and core concepts are assigned higher baseline importance.
+4. **User Verification**: Positive feedback strengthens memory permanence, while corrections adjust or discard outdated information.
+5. **Knowledge Graph Centrality**: Crucial concepts connected to multiple topics become permanent anchor nodes in your knowledge graph.
+6. **Procedural Utility**: Active workflows, custom rules, and recurring tasks are kept readily accessible for future sessions.
 
-#### Analytical Factor Breakdown:
-1. **Recency ($F_R$)**: Exponential Ebbinghaus decay with half-life calibration parameter $\\tau$:
-   $$F_R(\\Delta t) = \\exp\\left(-\\lambda \\cdot \\frac{{\\Delta t}}{{\\tau}}\\right)$$
-2. **Access Frequency ($F_F$)**: Logarithmic practice saturation avoiding runaway integer escalation:
-   $$F_F(a) = \\frac{{\\ln(1 + a)}}{{\\ln(1 + a) + \\kappa_f}}$$
-3. **Emotional/Semantic Salience ($F_S$)**: Encoded importance $S \\in [0.0, 1.0]$.
-4. **User Verification ($F_V$)**: Human feedback reinforcement weight ($V_{{base}} + 0.1 \\cdot N_{{reinforce}}$).
-5. **Knowledge Graph Centrality ($F_C$)**: Degree/PageRank topological permanence:
-   $$F_C(v_i) = \\frac{{\\ln(1 + \\text{{deg}}(v_i))}}{{\\ln(1 + \\text{{deg}}_{{max}})}}$$
-6. **Procedural Utility ($F_U$)**: Binary indicator for active procedural workflows ($0.95$ vs $0.45$).
-
-#### Retrieved Grounding Context:
+#### Active Knowledge Grounding:
 {facts_block}
 
-#### System Implications:
-Unlike naive FIFO window pruning or static vector decay, topological centrality ($F_C$) anchors relational hub entities as permanent memory nodes, while conversational transients decay below the consolidation threshold ($<0.15$) for automatic garbage collection."""
+#### How It Works:
+Unlike standard chatbots that erase everything between sessions, MEMORA continuously consolidates your most important knowledge while gracefully pruning temporary chatter."""
 
         elif "graphrag" in q_lower or "vector" in q_lower or "retrieval" in q_lower:
-            return f"""### Retrieval Architecture: Hybrid GraphRAG vs. Vector MIPS
+            return f"""### Hybrid GraphRAG vs. Standard Vector Search
 
-#### 1. Mathematical Formulation
-Dense vector retrieval projects tokens into continuous space $\\mathcal{{V}} \\subset \\mathbb{{R}}^d$ and computes Maximum Inner Product Search (MIPS):
-$$\\text{{TopK}}_{{vector}}(q) = \\arg\\max_{{c \\in \\mathcal{{C}}}} \\frac{{q \\cdot c}}{{(\\|q\\| \\cdot \\|c\\|)}}.$$
+MEMORA combines semantic vector search with knowledge graph exploration to deliver comprehensive, connected answers:
 
-In contrast, **MEMORA Hybrid GraphRAG** fuses embedding proximity with topological random walk coverage:
-$$\\mathcal{{S}}_{{hybrid}}(q, n_i) = \\alpha \\cdot \\text{{Sim}}_{{vec}}(q, n_i) + (1 - \\alpha) \\cdot \\left[ \\text{{PPR}}(q_{{seeds}}, n_i) \\cdot Score_{{retention}}(n_i) \\right]$$
-where $\\text{{PPR}}$ denotes Personalized PageRank restart probability over the entity graph $\\mathcal{{G}} = (\\mathcal{{V}}, \\mathcal{{E}})$.
+1. **Vector Semantic Search**: Quickly finds passages with matching conceptual meaning using dense embeddings.
+2. **Graph Topological Traversal**: Follows relationship connections across multiple entities (e.g., who worked with whom on which project), which standard vector search misses.
+3. **Hybrid Reranking**: Balances direct similarity with topological graph centrality to surface both immediate answers and deep contextual background.
 
-#### 2. Retrieved Grounding Context:
+#### Active Knowledge Grounding:
 {facts_block}
 
-#### 3. Empirical Advantages:
-- **Multi-Hop Traversal**: Solves relational queries requiring $k \\ge 2$ hops where vector projection collapses intermediate entities.
-- **Provenance & Disambiguation**: Typed edge relations (`[works_on]`, `[prefers]`, `[depends_on]`) preserve relational semantics without token cross-contamination."""
+#### Key Advantage:
+By fusing graph relationships with vector embeddings, MEMORA solves multi-hop reasoning queries without hallucinating or losing intermediate context."""
 
         else:
-            return f"""### Grounded Response
+            return f"""### Memory-Grounded Response
 
-**Procedural Constraints Applied**: {user.preferred_tone} (detail_level: {user.detail_level})
+Synthesizing retrieved knowledge and personal context for: *"{query}"*
 
-#### Grounded Context:
+#### Active Context:
 {facts_block}
 
-#### Analysis:
-Synthesizing retrieved episodic and semantic memory traces for: *"{query}"*:
-- **Relational Grounding**: Entity linking mapped current inquiry to active knowledge subgraph nodes.
-- **Procedural Alignment**: Output adheres to requested depth, mathematical formatting, and domain terminology.
-- **State Update**: Turn encoded into episodic memory store with computed retention weight."""
+#### Insights:
+- **Connected Entities**: Identified relevant concepts and mapped their relationships in your personal knowledge graph.
+- **Adaptive Style**: Calibrated response tone ({user.preferred_tone}) and detail level ({user.detail_level}) based on your profile.
+- **Continuous Learning**: This interaction has been indexed into your long-term memory store for future continuity."""
 
 orchestrator = AgentOrchestrator()
