@@ -27,6 +27,7 @@ import { api } from '../../lib/api';
 import { ThoughtProcess } from './ThoughtProcess';
 import { FeedbackModal } from './FeedbackModal';
 import { VoiceAmbientModal } from './VoiceAmbientModal';
+import { FormattedMessage } from './FormattedMessage';
 
 interface BotPersona {
   id: 'aria' | 'kira' | 'atlas';
@@ -434,9 +435,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ onMemoryUpdated })
                     </div>
 
                     {/* Content */}
-                    <div className="whitespace-pre-wrap font-sans text-sm leading-relaxed space-y-3.5">
-                      {msg.content}
-                    </div>
+                    {msg.role === 'assistant' ? (
+                      <FormattedMessage content={msg.content} />
+                    ) : (
+                      <div className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-100">
+                        {msg.content}
+                      </div>
+                    )}
 
                     {/* Reasoning Trace Drawer */}
                     {msg.thoughts && msg.thoughts.length > 0 && (
