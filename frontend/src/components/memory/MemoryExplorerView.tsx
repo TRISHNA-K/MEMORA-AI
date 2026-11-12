@@ -18,8 +18,8 @@ import {
   BookOpen,
   History
 } from 'lucide-react';
-import { MemoryItem, MemoryOverviewStats } from '@/lib/types';
-import { api } from '@/lib/api';
+import { MemoryItem, MemoryOverviewStats } from '../../lib/types';
+import { api } from '../../lib/api';
 
 export const MemoryExplorerView: React.FC = () => {
   const [stats, setStats] = useState<MemoryOverviewStats | null>(null);

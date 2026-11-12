@@ -14,8 +14,8 @@ import {
   Table,
   Layers
 } from 'lucide-react';
-import { KGNode, KGEdge } from '@/lib/types';
-import { api } from '@/lib/api';
+import { KGNode, KGEdge } from '../../lib/types';
+import { api } from '../../lib/api';
 
 export const KnowledgeGraphView: React.FC = () => {
   const [nodes, setNodes] = useState<KGNode[]>([]);

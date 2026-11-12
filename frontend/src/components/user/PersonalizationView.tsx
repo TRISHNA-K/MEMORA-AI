@@ -13,8 +13,8 @@ import {
   Sparkles,
   Bot
 } from 'lucide-react';
-import { UserProfile } from '@/lib/types';
-import { api } from '@/lib/api';
+import { UserProfile } from '../../lib/types';
+import { api } from '../../lib/api';
 
 export const PersonalizationView: React.FC = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);

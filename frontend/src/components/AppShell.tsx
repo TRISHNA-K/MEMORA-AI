@@ -2,17 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { AppMode, MemoryOverviewStats } from '@/lib/types';
-import { Sidebar } from '@/components/layout/Sidebar';
-import { ChatInterface } from '@/components/assistant/ChatInterface';
-import { KnowledgeGraphView } from '@/components/graph/KnowledgeGraphView';
-import { MemoryExplorerView } from '@/components/memory/MemoryExplorerView';
-import { PersonalizationView } from '@/components/user/PersonalizationView';
-import { api } from '@/lib/api';
+import { AppMode, MemoryOverviewStats } from '../lib/types';
+import { Sidebar } from './layout/Sidebar';
+import { ChatInterface } from './assistant/ChatInterface';
+import { KnowledgeGraphView } from './graph/KnowledgeGraphView';
+import { MemoryExplorerView } from './memory/MemoryExplorerView';
+import { PersonalizationView } from './user/PersonalizationView';
+import { api } from '../lib/api';
 
 // Dynamically import ResearchDashboardView with SSR disabled to prevent Recharts canvas hydration mismatch
 const ResearchDashboardView = dynamic(
-  () => import('@/components/research/ResearchDashboardView').then((m) => m.ResearchDashboardView),
+  () => import('./research/ResearchDashboardView').then((m) => m.ResearchDashboardView),
   { ssr: false }
 );
 

@@ -13,7 +13,7 @@ import {
   Sparkles,
   Zap
 } from 'lucide-react';
-import { AppMode } from '@/lib/types';
+import { AppMode } from '../../lib/types';
 
 interface SidebarProps {
   currentMode: AppMode;

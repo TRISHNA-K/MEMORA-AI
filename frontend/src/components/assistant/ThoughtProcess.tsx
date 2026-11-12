@@ -12,7 +12,7 @@ import {
   Sparkles,
   Zap
 } from 'lucide-react';
-import { ThoughtStep, RetrievedMemoryItem, SubgraphData } from '@/lib/types';
+import { ThoughtStep, RetrievedMemoryItem, SubgraphData } from '../../lib/types';
 
 interface ThoughtProcessProps {
   thoughts: ThoughtStep[];

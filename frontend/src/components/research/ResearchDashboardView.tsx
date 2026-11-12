@@ -33,8 +33,8 @@ import {
   Tooltip, 
   Legend 
 } from 'recharts';
-import { ExperimentReport } from '@/lib/types';
-import { api } from '@/lib/api';
+import { ExperimentReport } from '../../lib/types';
+import { api } from '../../lib/api';
 
 export const ResearchDashboardView: React.FC = () => {
   const [activeExp, setActiveExp] = useState<'exp1_memory' | 'exp2_graphrag' | 'exp3_personalization'>('exp1_memory');

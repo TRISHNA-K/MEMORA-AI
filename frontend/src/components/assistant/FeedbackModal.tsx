@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { ThumbsUp, ThumbsDown, Star, X, Check, Sparkles } from 'lucide-react';
-import { api } from '@/lib/api';
+import { api } from '../../lib/api';
 
 interface FeedbackModalProps {
   isOpen: boolean;

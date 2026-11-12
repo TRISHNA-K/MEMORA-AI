@@ -22,8 +22,8 @@ import {
   Flame,
   Bot
 } from 'lucide-react';
-import { ChatMessage } from '@/lib/types';
-import { api } from '@/lib/api';
+import { ChatMessage } from '../../lib/types';
+import { api } from '../../lib/api';
 import { ThoughtProcess } from './ThoughtProcess';
 import { FeedbackModal } from './FeedbackModal';
 import { VoiceAmbientModal } from './VoiceAmbientModal';
