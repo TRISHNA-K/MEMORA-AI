@@ -12,6 +12,8 @@ interface FormattedMessageProps {
  */
 function toHumanReadable(text: string): string {
   let s = text.trim();
+  // Strip pipes, bars, and stray delimiter artifacts
+  s = s.replace(/\|+/g, '');
   // Strip outer $$ or $ delimiters
   s = s.replace(/^\$\$+|\$\$+$/g, '').trim();
   s = s.replace(/^\$+|\$$/g, '').trim();
@@ -47,9 +49,11 @@ function toHumanReadable(text: string): string {
  * Renders inline text, turning **bold**, `code`, [tags], and $variables$ into clean, beautiful styled elements.
  */
 function renderInline(text: string): React.ReactNode[] {
+  // Strip pipes from text
+  const clean = text.replace(/\|+/g, '');
   // Matches $math$, **bold**, `code`, or [tag]
   const regex = /(\$[^\$]+?\$|\*\*[^*]+?\*\*|`[^`]+?`|\[[A-Za-z0-9_\s\-]+\])/g;
-  const tokens = text.split(regex);
+  const tokens = clean.split(regex);
 
   return tokens.map((token, idx) => {
     if (!token) return null;
@@ -119,7 +123,9 @@ function renderInline(text: string): React.ReactNode[] {
 export const FormattedMessage: React.FC<FormattedMessageProps> = ({ content }) => {
   if (!content) return null;
 
-  const lines = content.split('\n');
+  // Pre-sanitize any pipes or rogue bars
+  const sanitized = content.replace(/\|+/g, '');
+  const lines = sanitized.split('\n');
   const items: React.ReactNode[] = [];
   let i = 0;
 

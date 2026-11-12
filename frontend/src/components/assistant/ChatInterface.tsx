@@ -276,6 +276,17 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ onMemoryUpdated })
               Adaptive Persona
             </span>
           </label>
+
+          {messages.length > 0 && (
+            <button
+              onClick={() => setMessages([])}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-900/60 border border-white/10 hover:border-cyan-500/30 text-slate-400 hover:text-slate-200 text-xs font-mono transition cursor-pointer"
+              title="Reset conversation"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Clear Chat</span>
+            </button>
+          )}
         </div>
       </header>
 
