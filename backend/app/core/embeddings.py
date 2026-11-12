@@ -3,7 +3,12 @@ import json
 import zlib
 import numpy as np
 from typing import List, Optional
-import faiss
+
+# Optional FAISS import with automatic pure-NumPy fallback
+try:
+    import faiss
+except ImportError:
+    faiss = None
 
 # Optional OpenAI import
 try:
@@ -14,7 +19,6 @@ except ImportError:
 class EmbeddingEngine:
     def __init__(self):
         self.dim = 384
-        self._st_model = None
         self._openai_client = None
         self._openai_initialized = False
         
@@ -28,15 +32,6 @@ class EmbeddingEngine:
                 except Exception:
                     self._openai_client = None
         return self._openai_client
-        
-    def _get_st_model(self):
-        if self._st_model is None:
-            try:
-                from sentence_transformers import SentenceTransformer
-                self._st_model = SentenceTransformer("all-MiniLM-L6-v2")
-            except Exception:
-                self._st_model = False
-        return self._st_model if self._st_model is not False else None
         
     def get_embedding(self, text: str) -> np.ndarray:
         if not text or not text.strip():
@@ -84,36 +79,73 @@ class EmbeddingEngine:
         return np.vstack([self.get_embedding(t) for t in texts])
 
 class VectorStore:
+    """
+    Lightweight, high-performance in-memory vector store.
+    Uses FAISS IndexFlatIP if installed, or high-speed vector dot-product via NumPy.
+    """
     def __init__(self, dimension: int = 384):
         self.dimension = dimension
-        self.index = faiss.IndexFlatIP(dimension) # Inner Product for normalized cosine similarity
-        self.metadata = [] # parallel array of dicts
+        self.use_faiss = faiss is not None
+        if self.use_faiss:
+            self.index = faiss.IndexFlatIP(dimension)
+        else:
+            self.vectors: List[np.ndarray] = []
+        self.metadata: List[dict] = []
         
     def add(self, text: str, meta: dict, vector: np.ndarray):
-        vector = vector.reshape(1, -1).astype(np.float32)
-        self.index.add(vector)
+        vec = vector.reshape(1, -1).astype(np.float32)
+        norm = np.linalg.norm(vec)
+        if norm > 0:
+            vec = vec / norm
+            
+        if self.use_faiss:
+            self.index.add(vec)
+        else:
+            self.vectors.append(vec.flatten())
         self.metadata.append({"text": text, **meta})
         
     def search(self, query_vec: np.ndarray, top_k: int = 5) -> List[dict]:
-        if self.index.ntotal == 0:
+        total_items = self.total
+        if total_items == 0:
             return []
-        k = min(top_k, self.index.ntotal)
-        query_vec = query_vec.reshape(1, -1).astype(np.float32)
-        scores, indices = self.index.search(query_vec, k)
+        k = min(top_k, total_items)
+        
+        q = query_vec.reshape(1, -1).astype(np.float32)
+        norm = np.linalg.norm(q)
+        if norm > 0:
+            q = q / norm
+
         results = []
-        for score, idx in zip(scores[0], indices[0]):
-            if idx >= 0 and idx < len(self.metadata):
-                item = dict(self.metadata[idx])
-                item["similarity_score"] = float(score)
-                results.append(item)
+        if self.use_faiss:
+            scores, indices = self.index.search(q, k)
+            for score, idx in zip(scores[0], indices[0]):
+                if 0 <= idx < len(self.metadata):
+                    item = dict(self.metadata[idx])
+                    item["similarity_score"] = float(score)
+                    results.append(item)
+        else:
+            matrix = np.vstack(self.vectors)
+            scores = np.dot(matrix, q.flatten())
+            top_indices = np.argsort(scores)[::-1][:k]
+            for idx in top_indices:
+                if 0 <= idx < len(self.metadata):
+                    item = dict(self.metadata[idx])
+                    item["similarity_score"] = float(scores[idx])
+                    results.append(item)
+
         return results
 
     def clear(self):
-        self.index = faiss.IndexFlatIP(self.dimension)
+        if self.use_faiss:
+            self.index = faiss.IndexFlatIP(self.dimension)
+        else:
+            self.vectors = []
         self.metadata = []
 
     @property
     def total(self) -> int:
-        return self.index.ntotal
+        if self.use_faiss:
+            return self.index.ntotal
+        return len(self.metadata)
 
 embedding_engine = EmbeddingEngine()
